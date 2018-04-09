@@ -1,0 +1,180 @@
+---
+title: "Assignment_06"
+author: "Praveen Kenderla"
+date: "April 8, 2018"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+header-includes: \DeclareMathSizes{12}{12}{12}{12}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Loading Libraries:
+
+******
+```{r, message = FALSE, warning = FALSE, results = 'hide', include=TRUE}
+library(tidyverse)
+library(ggmap)
+library(ggplot2)
+library(maps)
+library(magick)
+```
+******
+
+## 1. Draw Road Map and Water Map 
+******
+```{r, message= FALSE, warning = FALSE, results = 'hide', fig.height =4}
+
+BudeRoadMap <- get_googlemap(center = c(-4.543678, 50.82664), maptype = "roadmap", zoom = 13)
+ggmap(BudeRoadMap) # Drawing roadmap of Bude West England
+dev.copy(png,'BudeRoadMap.png')
+dev.off()
+saveRDS(BudeRoadMap, "BudeRoadMap.RDS")
+
+
+```
+******
+
+## 1. Draw Road Map and Water Map (continued..) 
+
+******
+```{r, results = 'hide', message= FALSE, warning = FALSE, fig.keep = 'all', fig.height =4}
+
+BudeWaterMap <- get_map("Bude england",source = "stamen", maptype = "watercolor", zoom = 13)
+ggmap(BudeWaterMap) # Drawing WaterMap of Bude West England
+dev.copy(png,'BudeWaterMap.png')
+dev.off()
+saveRDS(BudeWaterMap, "BudeRoadMap.RDS")
+
+```
+******
+
+
+## 2. Identify locations in Bude
+
+******
+```{r, results = 'hide', message= FALSE, warning = FALSE, fig.keep = 'all', fig.height =4}
+
+A <- geocode("Bude West England")
+B <- get_map(A, zoom = 12)
+
+BWaterMap <- get_map(A, source = "stamen", maptype = "watercolor", zoom = 13)
+
+# Locations in the Bude 
+L1 <- geocode("Bude Sea Pool,bude")
+L2 <- geocode("Bude Beaches,bude")
+L3 <- geocode("Bude North Cornwall Cricket Club,bude")
+L4 <- geocode("Bar 35,bude")
+
+LRowCombi <- rbind(L1, L2, L3)   # Combing all co-oridnates for 3 locations
+```
+
+******
+
+## 2. Identify locations in Bude (Continued...)
+
+
+### Drawing red dots in the concered locations both in Water Map and Road Map. 
+
+
+******
+```{r, results = 'hide', message= FALSE, warning = FALSE, fig.keep = 'all', fig.height =4}
+
+BWaterMap <- ggmap(BudeWaterMap) + geom_point(aes(x = lon, y = lat), data = LRowCombi, color = "red", size = 2) 
+BWaterMap 
+
+dev.copy(png,'BWaterMap.png')
+dev.off()
+saveRDS(BudeRoadMap, "BWaterMap.RDS")
+
+
+BRoadMap <- ggmap(BudeRoadMap) + geom_point(aes(x = lon, y = lat), data = LRowCombi, color = "red", size = 2)
+BRoadMap
+
+dev.copy(png,'BRoadMap.png')
+dev.off()
+saveRDS(BudeRoadMap, "BRoadMap.RDS")
+```
+
+******
+
+
+## 3. Drawing path between cricket ground and Pub
+
+
+******
+```{r, results = 'hide', message= FALSE, warning = FALSE, fig.keep = 'all', fig.height =4}
+
+Q <- geocode("Bude North Cornwall Cricket Club, Bude")
+QMap1 <- get_googlemap(center = c(-4.552814, 50.83347), maptype = "roadmap", zoom = 15)
+
+QMap2 <- ggmap(QMap1) + geom_point(aes(x = lon, y = lat), data = Q, color = "red", size = 2)
+QMap2
+
+W <- geocode("Bar 35, Bude")
+WMap1 <- get_googlemap(center = c(-4.544088, 50.83016), maptype = "roadmap", zoom = 15 )
+
+WMap2 <- ggmap(WMap1) + geom_point(aes(x = lon, y = lat), data = W, color = "red", size = 2)
+WMap2
+```
+******
+
+### 3. Drawing path between cricket ground and Pub(continued)
+
+
+******
+```{r, results = 'hide', message= FALSE, warning = FALSE, fig.keep = 'all', fig.height =4}
+
+from <- "Bude North Cornwall Cricket Club, Bude" 
+to <- "Bar 35,bude"
+
+route_df <- route(from, to, structure = "route")
+#trek_df  <-  trek(from, to, structure = "route")
+
+
+QW <- rbind(Q,W)
+
+QW1 <- ggmap(WMap1) + geom_point(aes(x = lon, y = lat), data = QW, color = "red", size = 2)
+
+QW1
+
+Names <- c("Circket ground", "Bude Pub")
+```
+******
+
+### 3. Drawing path between cricket ground and Pub (Continued...)
+
+******
+```{r, results = 'hide', message= FALSE, warning = FALSE, fig.keep = 'all', fig.height =4}
+
+QW2 <- ggmap(WMap1) + 
+       geom_point(aes(x = lon, y = lat), data = QW, 
+                  color = "red", size = 2) +  
+        geom_text(aes(x = lon, y = lat), data = QW, label = Names) +
+        
+      geom_path(
+         aes(x = lon, y = lat), color = "blue", 
+          size = 1.5, alpha = .5,
+            data = route_df, lineend = "round"
+        ) + 
+       geom_path(
+         aes(x = lon, y = lat), color = "red",
+           size = 1.5, alpha = .5, 
+             data = route_df, lineend = "round"
+        ) 
+
+RouteMap <- QW2
+RouteMap # Path between the cricket club and the Bude Pub
+
+dev.copy(png,'RouteMap.png')
+dev.off()
+
+saveRDS(BudeRoadMap, "RouteMap.RDS")
+
+```
+******
